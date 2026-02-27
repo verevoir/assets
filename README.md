@@ -56,42 +56,42 @@ await manager.delete(asset.id);
 
 ### AssetManager
 
-| Method | Description |
-|--------|-------------|
-| `upload(input)` | Store binary data + create metadata. Extracts dimensions for bitmap images. |
-| `get(id)` | Retrieve asset metadata by ID, or `null`. |
-| `download(id)` | Retrieve metadata + binary data, or `null`. |
-| `delete(id)` | Delete both blob and metadata. Throws if not found. |
-| `list(options?)` | List assets with optional filtering, sorting, pagination. |
-| `updateMetadata(id, update)` | Update mutable fields (hotspot, filename). Throws if not found. |
+| Method                       | Description                                                                 |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| `upload(input)`              | Store binary data + create metadata. Extracts dimensions for bitmap images. |
+| `get(id)`                    | Retrieve asset metadata by ID, or `null`.                                   |
+| `download(id)`               | Retrieve metadata + binary data, or `null`.                                 |
+| `delete(id)`                 | Delete both blob and metadata. Throws if not found.                         |
+| `list(options?)`             | List assets with optional filtering, sorting, pagination.                   |
+| `updateMetadata(id, update)` | Update mutable fields (hotspot, filename). Throws if not found.             |
 
 ### Asset Record
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `string` | Unique identifier |
-| `filename` | `string` | Original filename (mutable via updateMetadata) |
-| `contentType` | `string` | MIME type |
-| `size` | `number` | Byte size |
-| `blobKey` | `string` | Key in the BlobStore |
-| `createdBy` | `string` | Uploader identity |
-| `type` | `'image' \| 'video'` | Derived from MIME prefix |
-| `format` | `'bitmap' \| 'vector'` | SVG → vector, everything else → bitmap |
-| `width` | `number \| null` | Pixel width (null for SVG/video) |
-| `height` | `number \| null` | Pixel height (null for SVG/video) |
-| `hotspot` | `Hotspot \| null` | Focal point `{ x: 0–1, y: 0–1 }` |
-| `createdAt` | `Date` | Creation timestamp |
-| `updatedAt` | `Date` | Last update timestamp |
+| Field         | Type                   | Description                                    |
+| ------------- | ---------------------- | ---------------------------------------------- |
+| `id`          | `string`               | Unique identifier                              |
+| `filename`    | `string`               | Original filename (mutable via updateMetadata) |
+| `contentType` | `string`               | MIME type                                      |
+| `size`        | `number`               | Byte size                                      |
+| `blobKey`     | `string`               | Key in the BlobStore                           |
+| `createdBy`   | `string`               | Uploader identity                              |
+| `type`        | `'image' \| 'video'`   | Derived from MIME prefix                       |
+| `format`      | `'bitmap' \| 'vector'` | SVG → vector, everything else → bitmap         |
+| `width`       | `number \| null`       | Pixel width (null for SVG/video)               |
+| `height`      | `number \| null`       | Pixel height (null for SVG/video)              |
+| `hotspot`     | `Hotspot \| null`      | Focal point `{ x: 0–1, y: 0–1 }`               |
+| `createdAt`   | `Date`                 | Creation timestamp                             |
+| `updatedAt`   | `Date`                 | Last update timestamp                          |
 
 ## Architecture
 
-| File | Responsibility |
-|------|---------------|
-| `src/types.ts` | Core interfaces: BlobStore, Asset, Hotspot, AssetMetadataUpdate, UploadInput, DownloadResult |
-| `src/metadata.ts` | `extractMetadata()` — Sharp-based dimension extraction for bitmap images |
-| `src/memory.ts` | `MemoryBlobStore` — Map-based in-memory blob storage with defensive copies |
-| `src/manager.ts` | `AssetManager` — orchestrates StorageAdapter + BlobStore for asset CRUD |
-| `src/index.ts` | Public API exports |
+| File              | Responsibility                                                                               |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| `src/types.ts`    | Core interfaces: BlobStore, Asset, Hotspot, AssetMetadataUpdate, UploadInput, DownloadResult |
+| `src/metadata.ts` | `extractMetadata()` — Sharp-based dimension extraction for bitmap images                     |
+| `src/memory.ts`   | `MemoryBlobStore` — Map-based in-memory blob storage with defensive copies                   |
+| `src/manager.ts`  | `AssetManager` — orchestrates StorageAdapter + BlobStore for asset CRUD                      |
+| `src/index.ts`    | Public API exports                                                                           |
 
 ## Design Decisions
 
