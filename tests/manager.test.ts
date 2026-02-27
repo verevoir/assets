@@ -1,7 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MemoryAdapter } from '@nextlake/storage';
+import sharp from 'sharp';
 import { AssetManager } from '../src/manager.js';
 import { MemoryBlobStore } from '../src/memory.js';
+
+async function makePng(width: number, height: number): Promise<Uint8Array> {
+  const buf = await sharp({
+    create: { width, height, channels: 3, background: '#ff0000' },
+  })
+    .png()
+    .toBuffer();
+  return new Uint8Array(buf);
+}
 
 describe('AssetManager', () => {
   let storage: MemoryAdapter;
@@ -326,6 +336,159 @@ describe('AssetManager', () => {
       });
       expect(images).toHaveLength(1);
       expect(images[0].filename).toBe('photo.png');
+    });
+  });
+
+  describe('metadata extraction', () => {
+    it('should extract width and height from a bitmap image', async () => {
+      const pngData = await makePng(200, 150);
+      const asset = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      expect(asset.width).toBe(200);
+      expect(asset.height).toBe(150);
+      expect(asset.hotspot).toBeNull();
+    });
+
+    it('should return null dimensions for video', async () => {
+      const asset = await manager.upload({
+        data: new Uint8Array([1, 2, 3]),
+        filename: 'clip.mp4',
+        contentType: 'video/mp4',
+        createdBy: 'user-1',
+      });
+
+      expect(asset.width).toBeNull();
+      expect(asset.height).toBeNull();
+    });
+
+    it('should return null dimensions for SVG', async () => {
+      const svgData = new Uint8Array(
+        Buffer.from(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"></svg>',
+        ),
+      );
+      const asset = await manager.upload({
+        data: svgData,
+        filename: 'icon.svg',
+        contentType: 'image/svg+xml',
+        createdBy: 'user-1',
+      });
+
+      expect(asset.width).toBeNull();
+      expect(asset.height).toBeNull();
+    });
+  });
+
+  describe('updateMetadata', () => {
+    it('should set hotspot without changing other fields', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      const updated = await manager.updateMetadata(uploaded.id, {
+        hotspot: { x: 0.5, y: 0.3 },
+      });
+
+      expect(updated.hotspot).toEqual({ x: 0.5, y: 0.3 });
+      expect(updated.filename).toBe('photo.png');
+      expect(updated.width).toBe(100);
+      expect(updated.height).toBe(100);
+      expect(updated.size).toBe(uploaded.size);
+      expect(updated.blobKey).toBe(uploaded.blobKey);
+    });
+
+    it('should clear hotspot when set to null', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      await manager.updateMetadata(uploaded.id, {
+        hotspot: { x: 0.5, y: 0.5 },
+      });
+      const cleared = await manager.updateMetadata(uploaded.id, {
+        hotspot: null,
+      });
+
+      expect(cleared.hotspot).toBeNull();
+    });
+
+    it('should update filename without changing blob', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'old-name.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      const updated = await manager.updateMetadata(uploaded.id, {
+        filename: 'new-name.png',
+      });
+
+      expect(updated.filename).toBe('new-name.png');
+      expect(updated.blobKey).toBe(uploaded.blobKey);
+      expect(updated.size).toBe(uploaded.size);
+    });
+
+    it('should throw for missing asset ID', async () => {
+      await expect(
+        manager.updateMetadata('nonexistent', { hotspot: { x: 0.5, y: 0.5 } }),
+      ).rejects.toThrow('Asset not found: nonexistent');
+    });
+
+    it('should reject hotspot x out of range', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      await expect(
+        manager.updateMetadata(uploaded.id, { hotspot: { x: 1.5, y: 0.5 } }),
+      ).rejects.toThrow('Hotspot x and y must be between 0 and 1');
+    });
+
+    it('should reject hotspot y out of range', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      await expect(
+        manager.updateMetadata(uploaded.id, { hotspot: { x: 0.5, y: -0.1 } }),
+      ).rejects.toThrow('Hotspot x and y must be between 0 and 1');
+    });
+
+    it('should reject empty filename', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      await expect(
+        manager.updateMetadata(uploaded.id, { filename: '' }),
+      ).rejects.toThrow('filename must not be empty');
     });
   });
 });

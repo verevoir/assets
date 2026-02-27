@@ -26,6 +26,18 @@ export interface BlobStore {
   delete(key: string): Promise<void>;
 }
 
+/** Focal point of an image, normalised to 0–1 range */
+export interface Hotspot {
+  x: number; // 0.0 (left) to 1.0 (right)
+  y: number; // 0.0 (top) to 1.0 (bottom)
+}
+
+/** Whitelisted fields that can be updated after upload */
+export interface AssetMetadataUpdate {
+  hotspot?: Hotspot | null;
+  filename?: string;
+}
+
 /** Asset metadata record */
 export interface Asset {
   id: string;
@@ -36,6 +48,9 @@ export interface Asset {
   createdBy: string;
   type: AssetType;
   format: AssetFormat;
+  width: number | null;
+  height: number | null;
+  hotspot: Hotspot | null;
   createdAt: Date;
   updatedAt: Date;
 }

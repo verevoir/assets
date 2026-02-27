@@ -28,7 +28,8 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@nextlake/storage": "git+ssh://git@github.com:adsurg/next-lake-storage-adapter.git#v0.2.0"
+    "@nextlake/storage": "git+ssh://git@github.com:adsurg/next-lake-storage-adapter.git#v0.2.0",
+    "sharp": "^0.33.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.3",
