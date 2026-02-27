@@ -1,7 +1,9 @@
 import type { Document, StorageAdapter } from '@nextlake/storage';
 import type {
   Asset,
+  AssetFormat,
   AssetManagerOptions,
+  AssetType,
   BlobStore,
   DownloadResult,
   ListOptions,
@@ -15,6 +17,9 @@ interface AssetData {
   contentType: string;
   size: number;
   blobKey: string;
+  createdBy: string;
+  type: AssetType;
+  format: AssetFormat;
 }
 
 function documentToAsset(doc: Document): Asset {
@@ -25,6 +30,9 @@ function documentToAsset(doc: Document): Asset {
     contentType: data.contentType,
     size: data.size,
     blobKey: data.blobKey,
+    createdBy: data.createdBy,
+    type: data.type,
+    format: data.format,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -51,6 +59,20 @@ export class AssetManager {
     if (!input.data || input.data.length === 0) {
       throw new Error('data must not be empty');
     }
+    if (!input.createdBy) {
+      throw new Error('createdBy is required');
+    }
+
+    const [mimePrefix] = input.contentType.split('/');
+    if (mimePrefix !== 'image' && mimePrefix !== 'video') {
+      throw new Error(
+        `Unsupported contentType: ${input.contentType}. Must be image/* or video/*.`,
+      );
+    }
+
+    const type: AssetType = mimePrefix;
+    const format: AssetFormat =
+      input.contentType === 'image/svg+xml' ? 'vector' : 'bitmap';
 
     const blobKey = crypto.randomUUID();
 
@@ -63,6 +85,9 @@ export class AssetManager {
         contentType: input.contentType,
         size: input.data.length,
         blobKey,
+        createdBy: input.createdBy,
+        type,
+        format,
       });
     } catch (err) {
       await this.blobStore.delete(blobKey);

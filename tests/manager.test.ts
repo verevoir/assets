@@ -21,6 +21,7 @@ describe('AssetManager', () => {
         data: new Uint8Array([0x89, 0x50, 0x4e, 0x47]),
         filename: 'logo.png',
         contentType: 'image/png',
+        createdBy: 'user-1',
       });
 
       expect(asset.id).toBeDefined();
@@ -28,6 +29,9 @@ describe('AssetManager', () => {
       expect(asset.contentType).toBe('image/png');
       expect(asset.size).toBe(4);
       expect(asset.blobKey).toBeDefined();
+      expect(asset.createdBy).toBe('user-1');
+      expect(asset.type).toBe('image');
+      expect(asset.format).toBe('bitmap');
       expect(asset.createdAt).toBeInstanceOf(Date);
       expect(asset.updatedAt).toBeInstanceOf(Date);
     });
@@ -36,8 +40,9 @@ describe('AssetManager', () => {
       const data = new Uint8Array([1, 2, 3]);
       const asset = await manager.upload({
         data,
-        filename: 'test.bin',
-        contentType: 'application/octet-stream',
+        filename: 'photo.jpg',
+        contentType: 'image/jpeg',
+        createdBy: 'user-1',
       });
 
       const blob = await blobStore.get(asset.blobKey);
@@ -45,12 +50,62 @@ describe('AssetManager', () => {
       expect(blob!.data).toEqual(new Uint8Array([1, 2, 3]));
     });
 
+    it('should derive type: image and format: bitmap for image/png', async () => {
+      const asset = await manager.upload({
+        data: new Uint8Array([1]),
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      expect(asset.type).toBe('image');
+      expect(asset.format).toBe('bitmap');
+    });
+
+    it('should derive type: image and format: vector for image/svg+xml', async () => {
+      const asset = await manager.upload({
+        data: new Uint8Array([1]),
+        filename: 'icon.svg',
+        contentType: 'image/svg+xml',
+        createdBy: 'user-1',
+      });
+
+      expect(asset.type).toBe('image');
+      expect(asset.format).toBe('vector');
+    });
+
+    it('should derive type: video and format: bitmap for video/mp4', async () => {
+      const asset = await manager.upload({
+        data: new Uint8Array([1]),
+        filename: 'clip.mp4',
+        contentType: 'video/mp4',
+        createdBy: 'user-1',
+      });
+
+      expect(asset.type).toBe('video');
+      expect(asset.format).toBe('bitmap');
+    });
+
+    it('should reject unsupported contentType', async () => {
+      await expect(
+        manager.upload({
+          data: new Uint8Array([1]),
+          filename: 'doc.pdf',
+          contentType: 'application/pdf',
+          createdBy: 'user-1',
+        }),
+      ).rejects.toThrow(
+        'Unsupported contentType: application/pdf. Must be image/* or video/*.',
+      );
+    });
+
     it('should reject empty filename', async () => {
       await expect(
         manager.upload({
           data: new Uint8Array([1]),
           filename: '',
-          contentType: 'text/plain',
+          contentType: 'image/png',
+          createdBy: 'user-1',
         }),
       ).rejects.toThrow('filename is required');
     });
@@ -61,6 +116,7 @@ describe('AssetManager', () => {
           data: new Uint8Array([1]),
           filename: 'test.txt',
           contentType: '',
+          createdBy: 'user-1',
         }),
       ).rejects.toThrow('contentType is required');
     });
@@ -69,10 +125,22 @@ describe('AssetManager', () => {
       await expect(
         manager.upload({
           data: new Uint8Array([]),
-          filename: 'test.txt',
-          contentType: 'text/plain',
+          filename: 'test.png',
+          contentType: 'image/png',
+          createdBy: 'user-1',
         }),
       ).rejects.toThrow('data must not be empty');
+    });
+
+    it('should reject empty createdBy', async () => {
+      await expect(
+        manager.upload({
+          data: new Uint8Array([1]),
+          filename: 'test.png',
+          contentType: 'image/png',
+          createdBy: '',
+        }),
+      ).rejects.toThrow('createdBy is required');
     });
 
     it('should clean up blob if metadata creation fails', async () => {
@@ -96,8 +164,9 @@ describe('AssetManager', () => {
       await expect(
         failingManager.upload({
           data: new Uint8Array([1, 2, 3]),
-          filename: 'test.txt',
-          contentType: 'text/plain',
+          filename: 'test.png',
+          contentType: 'image/png',
+          createdBy: 'user-1',
         }),
       ).rejects.toThrow('DB error');
 
@@ -116,14 +185,18 @@ describe('AssetManager', () => {
     it('should return asset metadata by ID', async () => {
       const uploaded = await manager.upload({
         data: new Uint8Array([1]),
-        filename: 'test.txt',
-        contentType: 'text/plain',
+        filename: 'test.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
       });
 
       const asset = await manager.get(uploaded.id);
       expect(asset).not.toBeNull();
       expect(asset!.id).toBe(uploaded.id);
-      expect(asset!.filename).toBe('test.txt');
+      expect(asset!.filename).toBe('test.png');
+      expect(asset!.createdBy).toBe('user-1');
+      expect(asset!.type).toBe('image');
+      expect(asset!.format).toBe('bitmap');
     });
 
     it('should return null for missing ID', async () => {
@@ -137,8 +210,9 @@ describe('AssetManager', () => {
       const data = new Uint8Array([10, 20, 30]);
       const uploaded = await manager.upload({
         data,
-        filename: 'data.bin',
-        contentType: 'application/octet-stream',
+        filename: 'data.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
       });
 
       const result = await manager.download(uploaded.id);
@@ -155,8 +229,9 @@ describe('AssetManager', () => {
     it('should return null if blob is missing', async () => {
       const uploaded = await manager.upload({
         data: new Uint8Array([1]),
-        filename: 'test.txt',
-        contentType: 'text/plain',
+        filename: 'test.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
       });
 
       // Manually delete the blob
@@ -171,8 +246,9 @@ describe('AssetManager', () => {
     it('should delete both blob and metadata', async () => {
       const uploaded = await manager.upload({
         data: new Uint8Array([1, 2, 3]),
-        filename: 'test.txt',
-        contentType: 'text/plain',
+        filename: 'test.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
       });
 
       await manager.delete(uploaded.id);
@@ -192,30 +268,34 @@ describe('AssetManager', () => {
     it('should list all assets', async () => {
       await manager.upload({
         data: new Uint8Array([1]),
-        filename: 'a.txt',
-        contentType: 'text/plain',
+        filename: 'a.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
       });
       await manager.upload({
         data: new Uint8Array([2]),
-        filename: 'b.txt',
-        contentType: 'text/plain',
+        filename: 'b.jpg',
+        contentType: 'image/jpeg',
+        createdBy: 'user-2',
       });
 
       const assets = await manager.list();
       expect(assets).toHaveLength(2);
-      expect(assets.map((a) => a.filename).sort()).toEqual(['a.txt', 'b.txt']);
+      expect(assets.map((a) => a.filename).sort()).toEqual(['a.png', 'b.jpg']);
     });
 
     it('should support limit option', async () => {
       await manager.upload({
         data: new Uint8Array([1]),
-        filename: 'a.txt',
-        contentType: 'text/plain',
+        filename: 'a.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
       });
       await manager.upload({
         data: new Uint8Array([2]),
-        filename: 'b.txt',
-        contentType: 'text/plain',
+        filename: 'b.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
       });
 
       const assets = await manager.list({ limit: 1 });
@@ -232,11 +312,13 @@ describe('AssetManager', () => {
         data: new Uint8Array([1]),
         filename: 'photo.png',
         contentType: 'image/png',
+        createdBy: 'user-1',
       });
       await manager.upload({
         data: new Uint8Array([2]),
-        filename: 'doc.txt',
-        contentType: 'text/plain',
+        filename: 'clip.mp4',
+        contentType: 'video/mp4',
+        createdBy: 'user-1',
       });
 
       const images = await manager.list({

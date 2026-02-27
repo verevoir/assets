@@ -2,6 +2,12 @@ import type { StorageAdapter, ListOptions } from '@nextlake/storage';
 
 export type { ListOptions };
 
+/** Media category derived from contentType MIME prefix */
+export type AssetType = 'image' | 'video';
+
+/** Whether the asset is bitmap or vector, derived from contentType */
+export type AssetFormat = 'bitmap' | 'vector';
+
 /** Binary data returned from a BlobStore */
 export interface BlobData {
   data: Uint8Array;
@@ -27,6 +33,9 @@ export interface Asset {
   contentType: string;
   size: number;
   blobKey: string;
+  createdBy: string;
+  type: AssetType;
+  format: AssetFormat;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +51,7 @@ export interface UploadInput {
   data: Uint8Array;
   filename: string;
   contentType: string;
+  createdBy: string;
 }
 
 /** Result of downloading an asset */

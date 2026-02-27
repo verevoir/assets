@@ -2,6 +2,8 @@ export type {
   BlobStore,
   BlobData,
   Asset,
+  AssetType,
+  AssetFormat,
   AssetManagerOptions,
   UploadInput,
   DownloadResult,
