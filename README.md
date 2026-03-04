@@ -1,4 +1,4 @@
-# @nextlake/assets
+# @verevoir/assets
 
 Asset management for NextLake — a pluggable BlobStore interface for binary data, metadata persistence via StorageAdapter, and automatic dimension extraction via Sharp.
 
@@ -12,14 +12,14 @@ Asset management for NextLake — a pluggable BlobStore interface for binary dat
 ## Install
 
 ```bash
-npm install @nextlake/assets
+npm install @verevoir/assets
 ```
 
 ## Quick Example
 
 ```typescript
-import { AssetManager, MemoryBlobStore } from '@nextlake/assets';
-import { MemoryAdapter } from '@nextlake/storage';
+import { AssetManager, MemoryBlobStore } from '@verevoir/assets';
+import { MemoryAdapter } from '@verevoir/storage';
 
 const storage = new MemoryAdapter();
 const blobStore = new MemoryBlobStore();

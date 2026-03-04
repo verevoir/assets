@@ -1,4 +1,4 @@
-import type { Document, StorageAdapter } from '@nextlake/storage';
+import type { Document, StorageAdapter } from '@verevoir/storage';
 import type {
   Asset,
   AssetFormat,

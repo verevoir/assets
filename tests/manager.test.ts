@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MemoryAdapter } from '@nextlake/storage';
+import { MemoryAdapter } from '@verevoir/storage';
 import sharp from 'sharp';
 import { AssetManager } from '../src/manager.js';
 import { MemoryBlobStore } from '../src/memory.js';

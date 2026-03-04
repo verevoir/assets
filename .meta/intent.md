@@ -1,4 +1,4 @@
-# Intent — @nextlake/assets
+# Intent — @verevoir/assets
 
 ## Purpose
 
@@ -28,6 +28,6 @@ Manage binary assets (images, videos, documents) alongside structured content. A
 
 ## Constraints
 
-- Depends on `@nextlake/storage` for metadata persistence (assets are stored as documents with `blockType='asset'`)
+- Depends on `@verevoir/storage` for metadata persistence (assets are stored as documents with `blockType='asset'`)
 - Depends on `sharp` for dimension extraction (dynamic import, graceful failure if unavailable)
-- No dependency on `@nextlake/schema` — asset metadata shape is internal, not defined via the schema engine
+- No dependency on `@verevoir/schema` — asset metadata shape is internal, not defined via the schema engine

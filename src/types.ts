@@ -1,4 +1,4 @@
-import type { StorageAdapter, ListOptions } from '@nextlake/storage';
+import type { StorageAdapter, ListOptions } from '@verevoir/storage';
 
 export type { ListOptions };
 

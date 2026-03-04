@@ -1,10 +1,10 @@
-# @nextlake/assets — Asset Management
+# @verevoir/assets — Asset Management
 
 Asset management for NextLake — BlobStore interface for binary data, AssetManager for orchestrating uploads/downloads with metadata persistence via StorageAdapter, and automatic dimension extraction via Sharp.
 
 ## What It Does
 
-- **BlobStore** — pluggable interface for binary storage (put/get/delete). Ships with `MemoryBlobStore`, `S3BlobStore` (via `@nextlake/assets/s3`), and `GcsBlobStore` (via `@nextlake/assets/gcs`).
+- **BlobStore** — pluggable interface for binary storage (put/get/delete). Ships with `MemoryBlobStore`, `S3BlobStore` (via `@verevoir/assets/s3`), and `GcsBlobStore` (via `@verevoir/assets/gcs`).
 - **AssetManager** — orchestrates `StorageAdapter` (metadata) + `BlobStore` (binary data) for upload, download, get, delete, list, and updateMetadata operations.
 - **Metadata Extraction** — `extractMetadata()` reads pixel dimensions from bitmap images via Sharp on upload. SVG and video get null dimensions.
 - **Asset type** — metadata record: id, filename, contentType, size, blobKey, createdBy, type, format, width, height, hotspot, createdAt, updatedAt.
@@ -22,8 +22,8 @@ Asset management for NextLake — BlobStore interface for binary data, AssetMana
 ## Quick Example
 
 ```typescript
-import { AssetManager, MemoryBlobStore } from '@nextlake/assets';
-import { MemoryAdapter } from '@nextlake/storage';
+import { AssetManager, MemoryBlobStore } from '@verevoir/assets';
+import { MemoryAdapter } from '@verevoir/storage';
 
 const storage = new MemoryAdapter();
 const blobStore = new MemoryBlobStore();
@@ -82,13 +82,13 @@ make run     # No-op (library, not a service)
 - `src/gcs/blob-store.ts` — `GcsBlobStore` — BlobStore backed by Google Cloud Storage. Accepts pre-configured `Storage` client, bucket, optional prefix.
 - `src/manager.ts` — `AssetManager` — orchestrates StorageAdapter + BlobStore for asset CRUD + updateMetadata.
 - `src/index.ts` — Public API exports.
-- `src/s3.ts` — Subpath entry point (`@nextlake/assets/s3`).
-- `src/gcs.ts` — Subpath entry point (`@nextlake/assets/gcs`).
+- `src/s3.ts` — Subpath entry point (`@verevoir/assets/s3`).
+- `src/gcs.ts` — Subpath entry point (`@verevoir/assets/gcs`).
 
 ## Dependencies
 
-- **Runtime:** `@nextlake/storage` v0.2.0 — for StorageAdapter, Document, ListOptions types
+- **Runtime:** `@verevoir/storage` v0.2.0 — for StorageAdapter, Document, ListOptions types
 - **Runtime:** `sharp` ^0.33.0 — image metadata extraction (dimensions)
 - **Optional peer:** `@aws-sdk/client-s3` ^3.0.0 — required only when using `S3BlobStore`
 - **Optional peer:** `@google-cloud/storage` ^7.0.0 — required only when using `GcsBlobStore`
-- **No** dependency on `@nextlake/schema`
+- **No** dependency on `@verevoir/schema`
