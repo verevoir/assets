@@ -1,6 +1,6 @@
 {
   "name": "@verevoir/assets",
-  "version": "0.2.0-alpha.1",
+  "version": "0.3.0-alpha.1",
   "license": "MIT",
   "description": "Asset management — BlobStore interface and metadata persistence for NextLake",
   "type": "module",
