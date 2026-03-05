@@ -27,6 +27,7 @@ interface AssetData {
   height: number | null;
   hotspot: Hotspot | null;
   tags: string[];
+  attribution: string | null;
 }
 
 function documentToAsset(doc: Document): Asset {
@@ -44,6 +45,7 @@ function documentToAsset(doc: Document): Asset {
     height: data.height ?? null,
     hotspot: data.hotspot ?? null,
     tags: Array.isArray(data.tags) ? data.tags : [],
+    attribution: data.attribution ?? null,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -104,6 +106,7 @@ export class AssetManager {
         height,
         hotspot: null,
         tags: [],
+        attribution: null,
       });
     } catch (err) {
       await this.blobStore.delete(blobKey);
@@ -173,6 +176,9 @@ export class AssetManager {
     }
     if (update.tags !== undefined) {
       changes.tags = update.tags;
+    }
+    if (update.attribution !== undefined) {
+      changes.attribution = update.attribution;
     }
 
     const updated = await this.storage.update(id, {

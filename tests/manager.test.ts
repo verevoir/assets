@@ -542,5 +542,27 @@ describe('AssetManager', () => {
 
       expect(updated.tags).toEqual([]);
     });
+
+    it('should set and clear attribution', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      expect(uploaded.attribution).toBeNull();
+
+      const updated = await manager.updateMetadata(uploaded.id, {
+        attribution: 'Photo by Jane Doe',
+      });
+      expect(updated.attribution).toBe('Photo by Jane Doe');
+
+      const cleared = await manager.updateMetadata(uploaded.id, {
+        attribution: null,
+      });
+      expect(cleared.attribution).toBeNull();
+    });
   });
 });
