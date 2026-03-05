@@ -26,6 +26,7 @@ interface AssetData {
   width: number | null;
   height: number | null;
   hotspot: Hotspot | null;
+  tags: string[];
 }
 
 function documentToAsset(doc: Document): Asset {
@@ -42,6 +43,7 @@ function documentToAsset(doc: Document): Asset {
     width: data.width ?? null,
     height: data.height ?? null,
     hotspot: data.hotspot ?? null,
+    tags: Array.isArray(data.tags) ? data.tags : [],
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -101,6 +103,7 @@ export class AssetManager {
         width,
         height,
         hotspot: null,
+        tags: [],
       });
     } catch (err) {
       await this.blobStore.delete(blobKey);
@@ -141,7 +144,7 @@ export class AssetManager {
     await this.storage.delete(id);
   }
 
-  /** Update mutable metadata fields (hotspot, filename). Blob-derived fields cannot be changed. */
+  /** Update mutable metadata fields (hotspot, filename, tags). Blob-derived fields cannot be changed. */
   async updateMetadata(
     id: string,
     update: AssetMetadataUpdate,
@@ -167,6 +170,9 @@ export class AssetManager {
         throw new Error('filename must not be empty');
       }
       changes.filename = update.filename;
+    }
+    if (update.tags !== undefined) {
+      changes.tags = update.tags;
     }
 
     const updated = await this.storage.update(id, {

@@ -36,6 +36,7 @@ export interface Hotspot {
 export interface AssetMetadataUpdate {
   hotspot?: Hotspot | null;
   filename?: string;
+  tags?: string[];
 }
 
 /** Asset metadata record */
@@ -51,6 +52,7 @@ export interface Asset {
   width: number | null;
   height: number | null;
   hotspot: Hotspot | null;
+  tags: string[];
   createdAt: Date;
   updatedAt: Date;
 }

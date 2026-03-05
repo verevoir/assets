@@ -352,6 +352,7 @@ describe('AssetManager', () => {
       expect(asset.width).toBe(200);
       expect(asset.height).toBe(150);
       expect(asset.hotspot).toBeNull();
+      expect(asset.tags).toEqual([]);
     });
 
     it('should return null dimensions for video', async () => {
@@ -489,6 +490,57 @@ describe('AssetManager', () => {
       await expect(
         manager.updateMetadata(uploaded.id, { filename: '' }),
       ).rejects.toThrow('filename must not be empty');
+    });
+
+    it('should set tags', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      expect(uploaded.tags).toEqual([]);
+
+      const updated = await manager.updateMetadata(uploaded.id, {
+        tags: ['hero', 'banner'],
+      });
+
+      expect(updated.tags).toEqual(['hero', 'banner']);
+      expect(updated.filename).toBe('photo.png');
+    });
+
+    it('should replace tags entirely', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      await manager.updateMetadata(uploaded.id, { tags: ['a', 'b'] });
+      const updated = await manager.updateMetadata(uploaded.id, {
+        tags: ['c'],
+      });
+
+      expect(updated.tags).toEqual(['c']);
+    });
+
+    it('should clear tags with empty array', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      await manager.updateMetadata(uploaded.id, { tags: ['x'] });
+      const updated = await manager.updateMetadata(uploaded.id, { tags: [] });
+
+      expect(updated.tags).toEqual([]);
     });
   });
 });
