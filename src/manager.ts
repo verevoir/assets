@@ -1,6 +1,7 @@
 import type { Document, StorageAdapter } from '@verevoir/storage';
 import type {
   Asset,
+  AssetAnalyzer,
   AssetFormat,
   AssetManagerOptions,
   AssetMetadataUpdate,
@@ -28,6 +29,7 @@ interface AssetData {
   hotspot: Hotspot | null;
   tags: string[];
   attribution: string | null;
+  alt: string | null;
 }
 
 function documentToAsset(doc: Document): Asset {
@@ -46,6 +48,7 @@ function documentToAsset(doc: Document): Asset {
     hotspot: data.hotspot ?? null,
     tags: Array.isArray(data.tags) ? data.tags : [],
     attribution: data.attribution ?? null,
+    alt: data.alt ?? null,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,
   };
@@ -55,10 +58,12 @@ function documentToAsset(doc: Document): Asset {
 export class AssetManager {
   private storage: StorageAdapter;
   private blobStore: BlobStore;
+  private analyzer?: AssetAnalyzer;
 
   constructor(options: AssetManagerOptions) {
     this.storage = options.storage;
     this.blobStore = options.blobStore;
+    this.analyzer = options.analyzer;
   }
 
   /** Upload binary data and create an asset metadata record. */
@@ -90,6 +95,21 @@ export class AssetManager {
     const blobKey = crypto.randomUUID();
     const { width, height } = await extractMetadata(input.data, type, format);
 
+    let analyzerResult: { alt: string; tags: string[] } | null = null;
+    if (this.analyzer) {
+      try {
+        const existingTags = await this.collectExistingTags();
+        analyzerResult = await this.analyzer.analyze({
+          data: input.data,
+          contentType: input.contentType,
+          filename: input.filename,
+          existingTags,
+        });
+      } catch {
+        // Analyzer failure is non-fatal — upload proceeds with empty alt/tags
+      }
+    }
+
     await this.blobStore.put(blobKey, input.data, input.contentType);
 
     let doc: Document;
@@ -105,8 +125,9 @@ export class AssetManager {
         width,
         height,
         hotspot: null,
-        tags: [],
+        tags: analyzerResult?.tags ?? [],
         attribution: null,
+        alt: analyzerResult?.alt ?? null,
       });
     } catch (err) {
       await this.blobStore.delete(blobKey);
@@ -180,6 +201,9 @@ export class AssetManager {
     if (update.attribution !== undefined) {
       changes.attribution = update.attribution;
     }
+    if (update.alt !== undefined) {
+      changes.alt = update.alt;
+    }
 
     const updated = await this.storage.update(id, {
       ...doc.data,
@@ -192,5 +216,20 @@ export class AssetManager {
   async list(options?: ListOptions): Promise<Asset[]> {
     const docs = await this.storage.list(BLOCK_TYPE, options);
     return docs.map((doc) => documentToAsset(doc));
+  }
+
+  /** Collect all unique tags from existing assets for analyzer context. */
+  private async collectExistingTags(): Promise<string[]> {
+    const docs = await this.storage.list(BLOCK_TYPE);
+    const tagSet = new Set<string>();
+    for (const doc of docs) {
+      const data = doc.data as unknown as AssetData;
+      if (Array.isArray(data.tags)) {
+        for (const tag of data.tags) {
+          tagSet.add(tag);
+        }
+      }
+    }
+    return [...tagSet];
   }
 }

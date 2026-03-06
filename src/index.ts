@@ -10,6 +10,9 @@ export type {
   ListOptions,
   Hotspot,
   AssetMetadataUpdate,
+  AssetAnalyzer,
+  AnalyzerInput,
+  AnalyzerResult,
 } from './types.js';
 export { MemoryBlobStore } from './memory.js';
 export { AssetManager } from './manager.js';

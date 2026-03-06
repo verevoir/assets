@@ -3,6 +3,7 @@ import { MemoryAdapter } from '@verevoir/storage';
 import sharp from 'sharp';
 import { AssetManager } from '../src/manager.js';
 import { MemoryBlobStore } from '../src/memory.js';
+import type { AssetAnalyzer } from '../src/types.js';
 
 async function makePng(width: number, height: number): Promise<Uint8Array> {
   const buf = await sharp({
@@ -543,6 +544,28 @@ describe('AssetManager', () => {
       expect(updated.tags).toEqual([]);
     });
 
+    it('should set and clear alt', async () => {
+      const pngData = await makePng(100, 100);
+      const uploaded = await manager.upload({
+        data: pngData,
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      expect(uploaded.alt).toBeNull();
+
+      const updated = await manager.updateMetadata(uploaded.id, {
+        alt: 'A red square',
+      });
+      expect(updated.alt).toBe('A red square');
+
+      const cleared = await manager.updateMetadata(uploaded.id, {
+        alt: null,
+      });
+      expect(cleared.alt).toBeNull();
+    });
+
     it('should set and clear attribution', async () => {
       const pngData = await makePng(100, 100);
       const uploaded = await manager.upload({
@@ -563,6 +586,104 @@ describe('AssetManager', () => {
         attribution: null,
       });
       expect(cleared.attribution).toBeNull();
+    });
+  });
+
+  describe('analyzer integration', () => {
+    it('should auto-populate alt and tags when analyzer is provided', async () => {
+      const analyzer: AssetAnalyzer = {
+        analyze: vi.fn().mockResolvedValue({
+          alt: 'A conference speaker on stage',
+          tags: ['speaker', 'stage', 'conference'],
+        }),
+      };
+
+      const analyzerManager = new AssetManager({
+        storage,
+        blobStore,
+        analyzer,
+      });
+
+      const asset = await analyzerManager.upload({
+        data: new Uint8Array([1, 2, 3]),
+        filename: 'speaker.jpg',
+        contentType: 'image/jpeg',
+        createdBy: 'user-1',
+      });
+
+      expect(asset.alt).toBe('A conference speaker on stage');
+      expect(asset.tags).toEqual(['speaker', 'stage', 'conference']);
+      expect(analyzer.analyze).toHaveBeenCalledOnce();
+    });
+
+    it('should pass existing tags to the analyzer', async () => {
+      const analyzer: AssetAnalyzer = {
+        analyze: vi.fn().mockResolvedValue({ alt: 'test', tags: ['new-tag'] }),
+      };
+
+      const analyzerManager = new AssetManager({
+        storage,
+        blobStore,
+        analyzer,
+      });
+
+      // Upload first asset with manual tags
+      const first = await analyzerManager.upload({
+        data: new Uint8Array([1]),
+        filename: 'first.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+      await analyzerManager.updateMetadata(first.id, {
+        tags: ['hero', 'banner'],
+      });
+
+      // Upload second asset — analyzer should receive existing tags
+      await analyzerManager.upload({
+        data: new Uint8Array([2]),
+        filename: 'second.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      const lastCall = (analyzer.analyze as ReturnType<typeof vi.fn>).mock
+        .calls[1];
+      expect(lastCall[0].existingTags).toContain('hero');
+      expect(lastCall[0].existingTags).toContain('banner');
+    });
+
+    it('should proceed with empty alt/tags if analyzer fails', async () => {
+      const analyzer: AssetAnalyzer = {
+        analyze: vi.fn().mockRejectedValue(new Error('LLM unavailable')),
+      };
+
+      const analyzerManager = new AssetManager({
+        storage,
+        blobStore,
+        analyzer,
+      });
+
+      const asset = await analyzerManager.upload({
+        data: new Uint8Array([1, 2, 3]),
+        filename: 'photo.jpg',
+        contentType: 'image/jpeg',
+        createdBy: 'user-1',
+      });
+
+      expect(asset.alt).toBeNull();
+      expect(asset.tags).toEqual([]);
+    });
+
+    it('should work without analyzer (default behaviour)', async () => {
+      const asset = await manager.upload({
+        data: new Uint8Array([1]),
+        filename: 'photo.png',
+        contentType: 'image/png',
+        createdBy: 'user-1',
+      });
+
+      expect(asset.alt).toBeNull();
+      expect(asset.tags).toEqual([]);
     });
   });
 });
