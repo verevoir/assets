@@ -29,7 +29,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com:adsurg/next-lake-assets.git"
+    "url": "git+ssh://git@github.com:verevoir/assets.git"
   },
   "scripts": {
     "build": "tsup",
