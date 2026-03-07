@@ -1,6 +1,6 @@
 {
   "name": "@verevoir/assets",
-  "version": "0.4.0-alpha.1",
+  "version": "0.5.0-beta.1",
   "license": "MIT",
   "description": "Asset management — BlobStore interface and metadata persistence for NextLake",
   "type": "module",
@@ -39,8 +39,8 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@verevoir/storage": "0.3.0-alpha.1",
-    "sharp": "^0.33.0"
+    "@verevoir/storage": "0.3.0-beta.1",
+    "sharp": "^0.34.5"
   },
   "peerDependencies": {
     "@aws-sdk/client-s3": "^3.0.0",
@@ -55,15 +55,15 @@
     }
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.0.0",
-    "@google-cloud/storage": "^7.0.0",
-    "@eslint/js": "^9.39.3",
-    "eslint": "^9.39.3",
+    "@aws-sdk/client-s3": "^3.1004.0",
+    "@google-cloud/storage": "^7.19.0",
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.1",
-    "tsup": "^8.0.0",
-    "typescript": "^5.7.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
-    "vitest": "^3.0.0"
+    "vitest": "^3.2.4"
   }
 }
