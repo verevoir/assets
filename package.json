@@ -3,6 +3,7 @@
   "version": "0.5.0-beta.1",
   "license": "MIT",
   "description": "Asset management — BlobStore interface and metadata persistence for NextLake",
+  "homepage": "https://verevoir.io",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
