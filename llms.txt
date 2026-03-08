@@ -1,0 +1,118 @@
+# @verevoir/assets
+
+> Binary asset management. BlobStore interface for file storage, AssetManager for metadata + blobs. Depends on `@verevoir/storage`.
+
+## Install
+
+```bash
+npm install @verevoir/assets
+```
+
+Runtime dependency: `sharp` (image metadata extraction). Peer dependency: `@verevoir/storage`.
+
+## Core Components
+
+### AssetManager
+
+Manages assets (upload, download, list, update metadata, delete). Stores binary data in a BlobStore and metadata in a StorageAdapter.
+
+```typescript
+import { AssetManager, MemoryBlobStore } from '@verevoir/assets';
+import { MemoryAdapter } from '@verevoir/storage';
+
+const db = new MemoryAdapter();
+const blobs = new MemoryBlobStore();
+await db.connect();
+
+const manager = new AssetManager({
+  storage: db,
+  blobStore: blobs,
+  // analyzer: optional AssetAnalyzer for auto-tagging
+});
+```
+
+### Upload
+
+```typescript
+const asset = await manager.upload({
+  data: uint8Array, // Uint8Array binary data
+  contentType: 'image/jpeg',
+  filename: 'photo.jpg',
+  createdBy: 'user-123',
+});
+// Returns Asset with id, type, format, width, height, etc.
+```
+
+### Other Operations
+
+```typescript
+const asset = await manager.get(id);
+const { data, contentType } = await manager.download(id);
+const assets = await manager.list({ where: { type: 'image' } });
+await manager.updateMetadata(id, { alt: 'A photo', tags: ['hero'], hotspot: { x: 0.5, y: 0.3 } });
+await manager.delete(id);
+```
+
+### Asset Type
+
+```typescript
+interface Asset {
+  id: string;
+  contentType: string;
+  filename: string;
+  size: number;
+  type: 'image' | 'video';
+  format: 'bitmap' | 'vector';
+  width: number | null;   // null for SVG and video
+  height: number | null;
+  hotspot: Hotspot | null; // { x: number; y: number } — 0-1 range
+  alt: string | null;
+  tags: string[];
+  attribution: string | null;
+  createdBy: string;
+}
+```
+
+Blob is immutable after upload. Metadata is mutable via `updateMetadata()`.
+
+## BlobStore Interface
+
+```typescript
+interface BlobStore {
+  put(key: string, data: Uint8Array, contentType: string): Promise<void>;
+  get(key: string): Promise<BlobData | null>;
+  delete(key: string): Promise<void>;
+}
+```
+
+### Implementations
+
+- `MemoryBlobStore` — in-memory (Map-based, defensive copies)
+
+### Subpath Exports
+
+- `@verevoir/assets/s3` — `S3BlobStore` wrapping `@aws-sdk/client-s3` (optional peer dep)
+- `@verevoir/assets/gcs` — `GcsBlobStore` wrapping `@google-cloud/storage` (optional peer dep)
+
+```typescript
+import { S3BlobStore } from '@verevoir/assets/s3';
+import { GcsBlobStore } from '@verevoir/assets/gcs';
+
+const s3 = new S3BlobStore({ client: s3Client, bucket: 'my-bucket', prefix: 'assets/' });
+const gcs = new GcsBlobStore({ client: storageClient, bucket: 'my-bucket', prefix: 'assets/' });
+```
+
+Cloud adapters accept a pre-configured client (dependency injection).
+
+## AssetAnalyzer
+
+Optional interface for auto-populating alt text and tags on upload.
+
+```typescript
+interface AssetAnalyzer {
+  analyze(input: { data: Uint8Array; contentType: string; filename: string; existingTags: string[] }): Promise<{ alt: string; tags: string[] }>;
+}
+
+const manager = new AssetManager({ storage: db, blobStore: blobs, analyzer: myAnalyzer });
+// On upload, analyzer runs automatically (non-fatal on failure)
+```
