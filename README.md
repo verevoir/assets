@@ -101,6 +101,11 @@ await manager.delete(asset.id);
 - **Null dimensions for video and SVG** — video would need ffprobe; SVG has no inherent pixel size.
 - **`Uint8Array` not `Buffer`** — more portable across environments.
 
+## Documentation
+
+- [Media](https://verevoir.io/docs/media) — assets, imgproxy URLs, and image display
+- [Integration Guide](https://verevoir.io/docs/integration) — connecting content models, storage, editor, and more
+
 ## Development
 
 ```bash
