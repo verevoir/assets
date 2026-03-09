@@ -1,6 +1,6 @@
 {
   "name": "@verevoir/assets",
-  "version": "0.5.0-beta.1",
+  "version": "0.5.0-beta.2",
   "license": "MIT",
   "description": "Asset management — BlobStore interface and metadata persistence for Verevoir",
   "homepage": "https://verevoir.io",

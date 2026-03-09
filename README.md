@@ -1,6 +1,6 @@
 # @verevoir/assets
 
-Asset management for NextLake — a pluggable BlobStore interface for binary data, metadata persistence via StorageAdapter, and automatic dimension extraction via Sharp.
+Asset management for Verevoir — a pluggable BlobStore interface for binary data, metadata persistence via StorageAdapter, and automatic dimension extraction via Sharp.
 
 ## What It Does
 
