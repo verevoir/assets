@@ -1,6 +1,6 @@
 {
   "name": "@verevoir/assets",
-  "version": "0.5.0-beta.5",
+  "version": "1.0.0",
   "license": "MIT",
   "description": "Asset management — BlobStore interface and metadata persistence for Verevoir",
   "homepage": "https://verevoir.io",
@@ -42,7 +42,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@verevoir/storage": "^0.3.0-beta.1",
+    "@verevoir/storage": "^1.0.0",
     "sharp": "^0.34.5"
   },
   "peerDependencies": {
